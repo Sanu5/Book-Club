@@ -6,6 +6,7 @@ import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
+import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.bca_android.adapter.BookAdapter
 import com.example.bca_android.adapter.ChatAdapter
 import com.example.bca_android.databinding.ActivityMainBinding
@@ -31,7 +32,15 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun observeViewModel() {
-        TODO("Not yet implemented")
+
+        viewModel.books.observe(this) {books ->
+            bookAdapter.setBooks(books)
+        }
+
+        viewModel.chatMessages.observe(this) { messages ->
+            chatAdapter.setMessage(messages)
+            binding.rvChat.scrollToPosition(messages.size - 1)
+        }
     }
 
     private fun setupUI() {
@@ -40,6 +49,33 @@ class MainActivity : AppCompatActivity() {
             viewModel.selectedBook(book)
             binding.selectedBookTitle.text = "Live Chat For '${book.title}' (Realtime DB)"
             binding.sendChatMessageButton.isEnabled = true
+        }
+        binding.rvBooks.layoutManager = LinearLayoutManager(this)
+        binding.rvBooks.adapter = bookAdapter
+
+        chatAdapter = ChatAdapter()
+        binding.rvChat.layoutManager = LinearLayoutManager(this).apply {
+            stackFromEnd = true
+        }
+        binding.rvChat.adapter = chatAdapter
+
+        binding.addBookButton.setOnClickListener {
+            val title = binding.bookTitleInput.text.toString()
+            val author = binding.bookAuthorInput.text.toString()
+
+            if(title.isNotEmpty() && author.isNotEmpty()) {
+                viewModel.addBook(title, author)
+                binding.bookTitleInput.text.clear()
+                binding.bookAuthorInput.text.clear()
+            }
+        }
+
+        binding.sendChatMessageButton.setOnClickListener {
+            val message = binding.chatMessageInput.text.toString()
+            if(message.isNotBlank()) {
+                viewModel.sendChatMessage(message)
+                binding.chatMessageInput.text.clear()
+            }
         }
     }
 }
